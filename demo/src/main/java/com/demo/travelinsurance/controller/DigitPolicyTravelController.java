@@ -42,6 +42,9 @@ public class DigitPolicyTravelController {
     @Autowired
     PolicyLogInterface policyLogInterface;
 
+    @Autowired
+    Gson gson;
+
     @PostMapping("/insert")
     public ResponseEntity<?> insertPolicy(@RequestBody PolicyRequest request, HttpServletRequest httpReq) {
         String path = httpReq.getRequestURI();
@@ -82,17 +85,17 @@ public class DigitPolicyTravelController {
     public ResponseEntity<?> createPolicy(@RequestBody PolicyRequest policyRequest, HttpServletRequest httpReq) {
         logger.info("start of createPolicy");
         logger.info("RequestBody:: " + policyRequest);
-        Gson gson = new Gson();
         PolicyIssuanceLog policyIssuanceLog = new PolicyIssuanceLog();
         PolicyResponse policyResponse = new PolicyResponse();
         Status status = new Status();
         try {
             policyIssuanceLog.setBookingId(policyRequest.getBookingId());
             policyIssuanceLog.setRequestedTimestamp(LocalDateTime.now());
-            policyIssuanceLog.setPolicyRequest(String.valueOf(policyRequest));
+            policyIssuanceLog.setPolicyRequest(gson.toJson(policyRequest));
             policyLogInterface.savePolicyToLog(policyIssuanceLog, policyRequest);
             status.setStatusCode(200);
             status.setStatusMessage("Success");
+            policyResponse.setStatus(status);
             policyResponse.setBookingId(policyRequest.getBookingId());
             policyResponse.setDate(LocalDateTime.now());
             policyResponse.setPolicyNumber("D"+System.currentTimeMillis());
@@ -103,7 +106,7 @@ public class DigitPolicyTravelController {
         } catch (PolicyCreationException pe) {
             logger.error("Inside PolicyCreationException:: " + pe.getMessage());
             policyIssuanceLog.setErrorLog(pe.getMessage());
-            policyIssuanceLog.setInternalResponse(String.valueOf(pe));
+            policyIssuanceLog.setInternalResponse(gson.toJson(pe.getMessage()));
             policyIssuanceLog.setResponseTimestamp(LocalDateTime.now());
             policyIssuanceLogRepository.save(policyIssuanceLog);
             status.setStatusCode(TravelApiConstant.StatusCode.BAD_REQUEST);
@@ -112,7 +115,7 @@ public class DigitPolicyTravelController {
         } catch (IllegalArgumentException iae) {
             logger.error("Inside IllegalArgumentException:: " + iae.getMessage());
             policyIssuanceLog.setErrorLog(iae.getMessage());
-            policyIssuanceLog.setInternalResponse(String.valueOf(iae));
+            policyIssuanceLog.setInternalResponse(gson.toJson(iae.getMessage()));
             policyIssuanceLog.setResponseTimestamp(LocalDateTime.now());
             policyIssuanceLogRepository.save(policyIssuanceLog);
             status.setStatusCode(TravelApiConstant.StatusCode.BAD_REQUEST);
@@ -121,7 +124,7 @@ public class DigitPolicyTravelController {
         } catch (Exception e) {
             logger.error("Inside Exception:: " + e.getMessage());
             policyIssuanceLog.setErrorLog(e.getMessage());
-            policyIssuanceLog.setInternalResponse(String.valueOf(e));
+            policyIssuanceLog.setInternalResponse(gson.toJson(e.getMessage()));
             policyIssuanceLog.setResponseTimestamp(LocalDateTime.now());
             policyIssuanceLogRepository.save(policyIssuanceLog);
             status.setStatusCode(TravelApiConstant.StatusCode.INTERNAL_ERROR);
@@ -131,4 +134,3 @@ public class DigitPolicyTravelController {
 
     }
 }
-

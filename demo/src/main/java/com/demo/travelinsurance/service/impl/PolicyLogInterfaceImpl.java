@@ -30,10 +30,12 @@ public class PolicyLogInterfaceImpl implements PolicyLogInterface {
     @Autowired
     ComonMapping comonMapping;
 
+    @Autowired
+    Gson gson;
+
     @Override
     public void savePolicyToLog(PolicyIssuanceLog policyIssuanceLog, PolicyRequest policyRequest) throws PolicyCreationException {
-        // Use Gson to serialize request/response objects to JSON for logging/storage
-        Gson gson = new Gson();
+        // Use injected Gson to serialize request/response objects to JSON for logging/storage
         try {
             logger.info("Start savePolicyToLog");
             HttpBinRequest httpBinRequest = comonMapping.newRquestForBin(policyRequest);
