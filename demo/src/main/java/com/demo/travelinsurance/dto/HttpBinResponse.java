@@ -24,5 +24,7 @@ public class HttpBinResponse {
         private String origin;
 
         private String url;
+
+        private String policyNumber;
 }
 

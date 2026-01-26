@@ -11,12 +11,12 @@ import com.demo.travelinsurance.service.PolicyLogInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.json.GsonJsonParser;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 
 import java.time.LocalDateTime;
+
+// Add Gson import
+import com.google.gson.Gson;
 
 @Service
 public class PolicyLogInterfaceImpl implements PolicyLogInterface {
@@ -32,13 +32,16 @@ public class PolicyLogInterfaceImpl implements PolicyLogInterface {
 
     @Override
     public void savePolicyToLog(PolicyIssuanceLog policyIssuanceLog, PolicyRequest policyRequest) throws PolicyCreationException {
-        GsonJsonParser gsonJsonParser = new GsonJsonParser();
+        // Use Gson to serialize request/response objects to JSON for logging/storage
+        Gson gson = new Gson();
         try {
             logger.info("Start savePolicyToLog");
             HttpBinRequest httpBinRequest = comonMapping.newRquestForBin(policyRequest);
-            policyIssuanceLog.setInternalRequest(String.valueOf(httpBinRequest));
+            // Serialize the request object to JSON
+            policyIssuanceLog.setInternalRequest(gson.toJson(httpBinRequest));
             HttpBinResponse responseJson = httpBinService.callPostBinApi(httpBinRequest);
-            policyIssuanceLog.setInternalResponse(String.valueOf(responseJson));
+            // Serialize the response object to JSON
+            policyIssuanceLog.setInternalResponse(gson.toJson(responseJson));
             policyIssuanceLog.setResponseTimestamp(LocalDateTime.now());
         } catch (PolicyCreationException pe) {
             logger.error("Inside PolicyCreationException:: " + pe.getMessage());

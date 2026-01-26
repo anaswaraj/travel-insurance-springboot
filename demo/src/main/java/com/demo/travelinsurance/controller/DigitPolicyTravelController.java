@@ -3,6 +3,7 @@ package com.demo.travelinsurance.controller;
 import com.demo.travelinsurance.constant.ErrorCode;
 import com.demo.travelinsurance.constant.TravelApiConstant;
 import com.demo.travelinsurance.dto.PolicyRequest;
+import com.demo.travelinsurance.dto.PolicyResponse;
 import com.demo.travelinsurance.entity.PolicyIssuanceLog;
 import com.demo.travelinsurance.entity.TravelPolicyEntity;
 import com.demo.travelinsurance.error.Status;
@@ -10,6 +11,7 @@ import com.demo.travelinsurance.exception.PolicyCreationException;
 import com.demo.travelinsurance.repository.PolicyIssuanceLogRepository;
 import com.demo.travelinsurance.service.PolicyLogInterface;
 import com.demo.travelinsurance.service.PolicyService;
+import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,15 +82,24 @@ public class DigitPolicyTravelController {
     public ResponseEntity<?> createPolicy(@RequestBody PolicyRequest policyRequest, HttpServletRequest httpReq) {
         logger.info("start of createPolicy");
         logger.info("RequestBody:: " + policyRequest);
+        Gson gson = new Gson();
         PolicyIssuanceLog policyIssuanceLog = new PolicyIssuanceLog();
+        PolicyResponse policyResponse = new PolicyResponse();
         Status status = new Status();
         try {
             policyIssuanceLog.setBookingId(policyRequest.getBookingId());
             policyIssuanceLog.setRequestedTimestamp(LocalDateTime.now());
             policyIssuanceLog.setPolicyRequest(String.valueOf(policyRequest));
             policyLogInterface.savePolicyToLog(policyIssuanceLog, policyRequest);
+            status.setStatusCode(200);
+            status.setStatusMessage("Success");
+            policyResponse.setBookingId(policyRequest.getBookingId());
+            policyResponse.setDate(LocalDateTime.now());
+            policyResponse.setPolicyNumber("D"+System.currentTimeMillis());
+            String response=gson.toJson(policyResponse);
+            policyIssuanceLog.setPolicyResponse(response);
             policyIssuanceLogRepository.save(policyIssuanceLog);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return new ResponseEntity<>(response,HttpStatus.OK);
         } catch (PolicyCreationException pe) {
             logger.error("Inside PolicyCreationException:: " + pe.getMessage());
             policyIssuanceLog.setErrorLog(pe.getMessage());
